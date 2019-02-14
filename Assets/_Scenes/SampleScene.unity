@@ -336,6 +336,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1206002011}
   - component: {fileID: 1206002012}
+  - component: {fileID: 1206002013}
   m_Layer: 0
   m_Name: WorldGen
   m_TagString: Untagged
@@ -372,3 +373,15 @@ MonoBehaviour:
   chunkPrefab: {fileID: 888325883864077994, guid: b0b3763b927555c43b372515b954bfda,
     type: 3}
   seed: 0
+--- !u!114 &1206002013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1206002010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4dbeb63cbc42ca44a953c402bd7b3e30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
