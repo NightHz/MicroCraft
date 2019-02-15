@@ -17,10 +17,14 @@ public enum BlockID : byte
     Wood = 17,
     Leaves = 18,
     //Glass = 20,
-    Sandstone = 24,
+    Sandstone = 24
 }
 
-public class BlockList
+/// <summary>
+/// 方块列表，可由此获得各种方块的实例
+/// 这是一个静态类
+/// </summary>
+public static class BlockList
 {
     public static Dictionary<BlockID, Block> blocks = null;
 

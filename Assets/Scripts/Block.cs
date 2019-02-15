@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 方块
+/// </summary>
 public class Block
 {
-    public static float uvOffset = 1f / 16;
-    public static float uvShrink = uvOffset / 32;
+    static float uvOffset = 1f / 16;
+    static float uvShrink = uvOffset / 32;
 
     public BlockID id;
     public string name;
@@ -24,6 +27,11 @@ public class Block
     public float rightU2, rightV2;
     public float topU2, topV2;
     public float bottomU2, bottomV2;
+
+    public override string ToString()
+    {
+        return name + "(" + id + ")";
+    }
 
     /// <summary>
     /// 一般的构造器

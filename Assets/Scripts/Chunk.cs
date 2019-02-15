@@ -13,10 +13,15 @@ public enum BlockDirection : byte
     WEST = 5
 }
 
+/// <summary>
+/// 区块
+/// </summary>
 public class Chunk : MonoBehaviour
 {
     [HideInInspector]
     public bool isFinished = false;
+    [HideInInspector]
+    public bool isDirty = false;
     [HideInInspector]
     public Vector3Int position;
     [HideInInspector]

@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
+/// <summary>
+/// 区块生成器，绑定在游戏物件上，只能被实例化一次
+/// 提交到此处的区块会分配到多帧生成
+/// </summary>
 public class ChunkGen : MonoBehaviour
 {
     public static int width = 16;
     public static int height = 32;
 
-    static ChunkGen chunkGen;
+    static ChunkGen chunkGen = null;
 
     Mesh mesh;
     List<Vector3> vertices;
@@ -20,8 +23,16 @@ public class ChunkGen : MonoBehaviour
 
     private void Start()
     {
-        chunkGen = this;
+        if (chunkGen == null)
+            chunkGen = this;
+        else
+            Debug.LogError("ChunkGen同一时间被加载了两次");
         StartCoroutine(Generate());
+    }
+
+    private void OnDestroy()
+    {
+        chunkGen = null;
     }
 
     public static void StartGenerate(Chunk chunk)
@@ -42,8 +53,8 @@ public class ChunkGen : MonoBehaviour
                 // GenerateChunk
                 chunk.blocks = new BlockID[width, height, width];
                 for (int x = 0; x < width; x++)
-                    for (int y = 0; y < height; y++)
-                        for (int z = 0; z < width; z++)
+                    for (int z = 0; z < width; z++)
+                        for (int y = 0; y < height; y++)
                             chunk.blocks[x, y, z] = WorldTerrain.GetBlock(x + chunk.position.x, y + chunk.position.y, z + chunk.position.z);
                 yield return null;
 
