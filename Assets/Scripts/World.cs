@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 世界生成器，绑定在游戏物件上，只能被实例化一次
-/// 生成世界的起点，控制区块生成的位置
+/// 世界，只能被实例化一次
+/// 控制区块生成
 /// </summary>
-public class WorldGen : MonoBehaviour
+public class World : MonoBehaviour
 {
-    static WorldGen worldGen = null;
+    static World world = null;
 
     public GameObject chunkPrefab;
     Dictionary<Vector3Int, GameObject> chunks = new Dictionary<Vector3Int, GameObject>();
@@ -16,31 +16,33 @@ public class WorldGen : MonoBehaviour
     GameObject player;
 
     public string seed;
+    public static int maxDistanceGen = 100;
+    public static int minDistanceDes = 140;
     
     private void Start()
     {
-        if (worldGen == null)
-            worldGen = this;
+        if (world == null)
+            world = this;
         else
-            Debug.LogError("WorldGen同一时间被加载了两次");
+            Debug.LogError("World同一时间被加载了两次");
         WorldTerrain.Awake(seed.GetHashCode());
-        GenerateWorld();
         player = GameObject.FindGameObjectWithTag("Player");
+        // GenerateWorld();
     }
 
     private void OnDestroy()
     {
-        worldGen = null;
+        world = null;
     }
 
     private void Update()
     {
         // 对足够近的未生成区块进行生成
         Vector3Int chunkPos = new Vector3Int();
-        for (int x = Mathf.FloorToInt(player.transform.position.x - 80) / 16 * 16; x < player.transform.position.x + 80; x += ChunkGen.width)
+        for (int x = ChunkGen.AlignChunkXZ(player.transform.position.x - maxDistanceGen) - ChunkGen.width; x < player.transform.position.x + maxDistanceGen; x += ChunkGen.width)
         {
             chunkPos.x = x;
-            for (int z = Mathf.FloorToInt(player.transform.position.z - 80) / 16 * 16; z < player.transform.position.z + 80; z += ChunkGen.width)
+            for (int z = ChunkGen.AlignChunkXZ(player.transform.position.z - maxDistanceGen) - ChunkGen.width; z < player.transform.position.z + maxDistanceGen; z += ChunkGen.width)
             {
                 chunkPos.z = z;
                 for (int y = 0; y < 1; y += ChunkGen.height)
@@ -48,9 +50,9 @@ public class WorldGen : MonoBehaviour
                     chunkPos.y = y;
                     if (!chunks.ContainsKey(chunkPos))
                     {
-                        float disX = player.transform.position.x - x;
-                        float disZ = player.transform.position.z - z;
-                        if (disX * disX + disZ * disZ < 5000)
+                        float disX = x + ChunkGen.width / 2 - player.transform.position.x;
+                        float disZ = z + ChunkGen.width / 2 - player.transform.position.z;
+                        if (disX * disX + disZ * disZ < maxDistanceGen * maxDistanceGen)
                         {
                             Debug.Log("开始生成区块:(" + x + "," + y + "," + z + ")");
                             GenerateChunk(x, y, z);
@@ -77,6 +79,6 @@ public class WorldGen : MonoBehaviour
 
     public static void DestroyChunk(Vector3Int position)
     {
-        worldGen.chunks.Remove(position);
+        world.chunks.Remove(position);
     }
 }

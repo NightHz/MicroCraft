@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 区块生成器，绑定在游戏物件上，只能被实例化一次
+/// 区块生成器，只能被实例化一次
 /// 提交到此处的区块会分配到多帧生成
 /// </summary>
 public class ChunkGen : MonoBehaviour
@@ -39,6 +39,13 @@ public class ChunkGen : MonoBehaviour
     {
         chunkGen.chunks.Enqueue(chunk);
     }
+
+    public static int AlignChunkXZ(int xz) { return xz / width * width; }
+    public static int AlignChunkXZ(float xz) { return Mathf.FloorToInt(xz) / width * width; }
+    public static int AlignChunkY(int y) { return y / height * height; }
+    public static int AlignChunkY(float y) { return Mathf.FloorToInt(y) / height * height; }
+    public static Vector3Int AlignChunk(Vector3Int p) { return new Vector3Int(AlignChunkXZ(p.x), AlignChunkY(p.y), AlignChunkXZ(p.z)); }
+    public static Vector3Int AlignChunk(Vector3 p) { return new Vector3Int(AlignChunkXZ(p.x), AlignChunkY(p.y), AlignChunkXZ(p.z)); }
 
     IEnumerator Generate()
     {

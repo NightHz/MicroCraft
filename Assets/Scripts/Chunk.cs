@@ -20,8 +20,7 @@ public class Chunk : MonoBehaviour
 {
     [HideInInspector]
     public bool isFinished = false;
-    [HideInInspector]
-    public bool isDirty = false;
+    //bool isDirty = false;
     [HideInInspector]
     public Vector3Int position;
     [HideInInspector]
@@ -47,12 +46,12 @@ public class Chunk : MonoBehaviour
             return;
 
         // 距离足够大，进行销毁
-        float disX = player.transform.position.x - position.x;
-        float disZ = player.transform.position.z - position.z;
-        if (disX * disX + disZ * disZ > 10000)
+        float disX = position.x + ChunkGen.width / 2 - player.transform.position.x;
+        float disZ = position.z + ChunkGen.width / 2 - player.transform.position.z;
+        if (disX * disX + disZ * disZ > World.minDistanceDes * World.minDistanceDes)
         {
             Debug.Log("销毁区块:(" + position.x + ", " + position.y + ", " + position.z + ")");
-            WorldGen.DestroyChunk(position);
+            World.DestroyChunk(position);
             Destroy(gameObject);
         }
     }

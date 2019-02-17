@@ -26,7 +26,7 @@ public enum BlockID : byte
 /// </summary>
 public static class BlockList
 {
-    public static Dictionary<BlockID, Block> blocks = null;
+    static Dictionary<BlockID, Block> blocks = null;
 
     static void Awake()
     {

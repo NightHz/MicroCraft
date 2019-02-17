@@ -58,7 +58,10 @@ public class PerlinNoise
     {
         return t * t * t * (10 + t * (-15 + t * 6)); // 6*t^5 - 15*t^4 + 10*t^3
     }
-
+    
+    /// <summary>
+    /// 返回值在 -1.0 到 1.0 之间
+    /// </summary>
     public float GetNoise(float x, float y)
     {
         int xi = Mathf.FloorToInt(x);
