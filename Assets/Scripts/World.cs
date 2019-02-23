@@ -16,8 +16,8 @@ public class World : MonoBehaviour
     GameObject player;
 
     public string seed;
-    public static int maxDistanceGen = 100;
-    public static int minDistanceDes = 140;
+    public static readonly int maxDistanceGen = 100;
+    public static readonly int minDistanceDes = 140;
     
     private void Start()
     {
@@ -39,24 +39,21 @@ public class World : MonoBehaviour
     {
         // 对足够近的未生成区块进行生成
         Vector3Int chunkPos = new Vector3Int();
+        chunkPos.y = 0;
         for (int x = ChunkGen.AlignChunkXZ(player.transform.position.x - maxDistanceGen) - ChunkGen.width; x < player.transform.position.x + maxDistanceGen; x += ChunkGen.width)
         {
             chunkPos.x = x;
             for (int z = ChunkGen.AlignChunkXZ(player.transform.position.z - maxDistanceGen) - ChunkGen.width; z < player.transform.position.z + maxDistanceGen; z += ChunkGen.width)
             {
                 chunkPos.z = z;
-                for (int y = 0; y < 1; y += ChunkGen.height)
+                if (!chunks.ContainsKey(chunkPos))
                 {
-                    chunkPos.y = y;
-                    if (!chunks.ContainsKey(chunkPos))
+                    float disX = x + ChunkGen.width / 2 - player.transform.position.x;
+                    float disZ = z + ChunkGen.width / 2 - player.transform.position.z;
+                    if (disX * disX + disZ * disZ < maxDistanceGen * maxDistanceGen)
                     {
-                        float disX = x + ChunkGen.width / 2 - player.transform.position.x;
-                        float disZ = z + ChunkGen.width / 2 - player.transform.position.z;
-                        if (disX * disX + disZ * disZ < maxDistanceGen * maxDistanceGen)
-                        {
-                            Debug.Log("开始生成区块:(" + x + "," + y + "," + z + ")");
-                            GenerateChunk(x, y, z);
-                        }
+                        Debug.Log("开始生成区块:(" + x + "," + 0 + "," + z + ")");
+                        GenerateChunk(x, 0, z);
                     }
                 }
             }
@@ -65,10 +62,25 @@ public class World : MonoBehaviour
 
     void GenerateWorld()
     {
-        for (int x = -64; x < 64; x += ChunkGen.width)
-            for (int z = -64; z < 64; z += ChunkGen.width)
-                for (int y = 0; y < 1; y += ChunkGen.height)
-                    GenerateChunk(x, y, z);
+        int distanceGen = (maxDistanceGen + minDistanceDes) / 2;
+        Vector3Int chunkPos = new Vector3Int();
+        chunkPos.y = 0;
+        for (int x = ChunkGen.AlignChunkXZ(-distanceGen) - ChunkGen.width; x < distanceGen; x += ChunkGen.width)
+        {
+            chunkPos.x = x;
+            for (int z = ChunkGen.AlignChunkXZ(-distanceGen) - ChunkGen.width; z < distanceGen; z += ChunkGen.width)
+            {
+                chunkPos.z = z;
+                float disX = x + ChunkGen.width / 2;
+                float disZ = z + ChunkGen.width / 2;
+                if (disX * disX + disZ * disZ < distanceGen * distanceGen)
+                {
+                    Debug.Log("开始生成区块:(" + x + "," + 0 + "," + z + ")");
+                    GenerateChunk(x, 0, z);
+                }
+
+            }
+        }
     }
 
     void GenerateChunk(int x, int y, int z)

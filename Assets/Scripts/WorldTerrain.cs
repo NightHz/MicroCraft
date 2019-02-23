@@ -8,30 +8,68 @@ using UnityEngine;
 /// </summary>
 public static class WorldTerrain
 {
-    public static int height = 32;
+    static readonly int version = 1;
+    public static readonly int heightMax = 128;
+    static readonly int seaLevel = 63;
 
     static int seed;
-    static PerlinNoise noise;
+    static int elevationSeed, roughnessSeed, detailSeed;
+    static PerlinNoise elevationNoise;
+    static PerlinNoise roughnessNoise, detailNoise;
+    static int densitySeed;
+    static PerlinNoise3 densityNoise;
 
     public static void Awake(int seed)
     {
         WorldTerrain.seed = seed;
-        noise = new PerlinNoise(seed);
+        System.Random random = new System.Random(seed);
         Debug.Log("seed=" + seed);
+        if (version == 1)
+        {
+            elevationSeed = random.Next();
+            roughnessSeed = random.Next();
+            detailSeed = random.Next();
+            elevationNoise = new PerlinNoise(elevationSeed);
+            roughnessNoise = new PerlinNoise(roughnessSeed);
+            detailNoise = new PerlinNoise(detailSeed);
+            Debug.Log("elevationSeed=" + elevationSeed);
+            Debug.Log("roughnessSeed=" + roughnessSeed);
+            Debug.Log("detailSeed=" + detailSeed);
+        }
+        else
+        {
+            densitySeed = random.Next();
+            densityNoise = new PerlinNoise3(densitySeed);
+            Debug.Log("densitySeed=" + densitySeed);
+        }
     }
 
     public static BlockID GetBlock(int x, int y, int z)
     {
-        //int y2 = Mathf.FloorToInt(Mathf.PerlinNoise(x / 20f, z / 20f) * 15 + 10);
-        int y2 = Mathf.FloorToInt(noise.GetNoise(x / 50f, z / 50f) * 12 + 18);
+        if (version == 1)
+        {
+            float elevation = elevationNoise.GetNoise(x / 100f, z / 100f) / 2;
+            float roughness = roughnessNoise.GetNoise(x / 100f, z / 100f) / 4;
+            float detail = detailNoise.GetNoise(x / 10f, z / 10f);
+            int height = Mathf.FloorToInt((elevation + (roughness * detail)) * 64 + 64);
 
-        if (y == y2)
-            return BlockID.Grass;
-        else if (y > y2)
-            return BlockID.Air;
-        else if (y < 3)
-            return BlockID.Bedrock;
+            if (y <= height)
+                return BlockID.Stone;
+            else
+                return BlockID.Air;
+        }
         else
-            return BlockID.Dirt;
+        {
+            float density = densityNoise.GetNoise(x / 50f, y / 50f, z / 50f);
+            float heightOffset = -2f * y / heightMax + 1f;
+            density += heightOffset;
+
+            if (density > 0.0)
+                return BlockID.Stone;
+            else if (y < seaLevel)
+                return BlockID.Ice;
+            else
+                return BlockID.Air;
+        }
     }
 }

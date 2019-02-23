@@ -17,7 +17,8 @@ public enum BlockID : byte
     Wood = 17,
     Leaves = 18,
     //Glass = 20,
-    Sandstone = 24
+    Sandstone = 24,
+    Ice = 79
 }
 
 /// <summary>
@@ -43,6 +44,7 @@ public static class BlockList
             blocks.Add(BlockID.Wood, new Block(BlockID.Wood, "Wood", 5, 1, 4, 1));
             blocks.Add(BlockID.Leaves, new Block(BlockID.Leaves, "Leaves", 5, 3));
             blocks.Add(BlockID.Sandstone, new Block(BlockID.Sandstone, "Sandstone", 0, 12));
+            blocks.Add(BlockID.Ice, new Block(BlockID.Ice, "Ice", 3, 4));
         }
     }
 

@@ -8,8 +8,8 @@ using UnityEngine;
 /// </summary>
 public class ChunkGen : MonoBehaviour
 {
-    public static int width = 16;
-    public static int height = 32;
+    public static readonly int width = 16;
+    public static readonly int height = WorldTerrain.heightMax;
 
     static ChunkGen chunkGen = null;
 
@@ -42,8 +42,8 @@ public class ChunkGen : MonoBehaviour
 
     public static int AlignChunkXZ(int xz) { return xz / width * width; }
     public static int AlignChunkXZ(float xz) { return Mathf.FloorToInt(xz) / width * width; }
-    public static int AlignChunkY(int y) { return y / height * height; }
-    public static int AlignChunkY(float y) { return Mathf.FloorToInt(y) / height * height; }
+    public static int AlignChunkY(int y) { return 0; }
+    public static int AlignChunkY(float y) { return 0; }
     public static Vector3Int AlignChunk(Vector3Int p) { return new Vector3Int(AlignChunkXZ(p.x), AlignChunkY(p.y), AlignChunkXZ(p.z)); }
     public static Vector3Int AlignChunk(Vector3 p) { return new Vector3Int(AlignChunkXZ(p.x), AlignChunkY(p.y), AlignChunkXZ(p.z)); }
 
@@ -59,10 +59,14 @@ public class ChunkGen : MonoBehaviour
 
                 // GenerateChunk
                 chunk.blocks = new BlockID[width, height, width];
-                for (int x = 0; x < width; x++)
-                    for (int z = 0; z < width; z++)
-                        for (int y = 0; y < height; y++)
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                        for (int z = 0; z < width; z++)
                             chunk.blocks[x, y, z] = WorldTerrain.GetBlock(x + chunk.position.x, y + chunk.position.y, z + chunk.position.z);
+                    if (y % 6 == 5)
+                        ;// yield return null;
+                }
                 yield return null;
 
                 // GenerateMesh
@@ -70,9 +74,9 @@ public class ChunkGen : MonoBehaviour
                 vertices = new List<Vector3>();
                 triangles = new List<int>();
                 uvs = new List<Vector2>();
-                for (int x = 0; x < width; x++)
+                for (int y = 0; y < height; y++)
                 {
-                    for (int y = 0; y < height; y++)
+                    for (int x = 0; x < width; x++)
                         for (int z = 0; z < width; z++)
                         {
                             // 如果此方块透明，不会提供面
@@ -86,11 +90,14 @@ public class ChunkGen : MonoBehaviour
                             if (IsTransparent(x, y - 1, z)) AddBottomFace(x, y, z, BlockList.GetBlock(chunk.blocks[x, y, z]));
                             if (IsTransparent(x, y + 1, z)) AddTopFace(x, y, z, BlockList.GetBlock(chunk.blocks[x, y, z]));
                         }
-                    if (x % 3 == 2)
+                    if (y % 6 == 5)
                         yield return null;
                 }
+                yield return null;
                 mesh.name = "ChunkMesh " + vertices.Count + " verts";
                 chunk.name += " " + mesh.name;
+                if (vertices.Count > ushort.MaxValue)
+                    mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
                 mesh.vertices = vertices.ToArray();
                 mesh.triangles = triangles.ToArray();
                 mesh.uv = uvs.ToArray();
