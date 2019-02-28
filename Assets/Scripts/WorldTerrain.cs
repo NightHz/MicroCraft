@@ -8,14 +8,16 @@ using UnityEngine;
 /// </summary>
 public static class WorldTerrain
 {
-    static readonly int version = 1;
+    static readonly bool use3D = false;
     public static readonly int heightMax = 128;
     static readonly int seaLevel = 63;
 
     static int seed;
+    // 2D
     static int elevationSeed, roughnessSeed, detailSeed;
-    static PerlinNoise elevationNoise;
-    static PerlinNoise roughnessNoise, detailNoise;
+    static PerlinNoiseBounded elevationNoise;
+    static PerlinNoiseBounded roughnessNoise, detailNoise;
+    // 3D
     static int densitySeed;
     static PerlinNoise3 densityNoise;
 
@@ -24,14 +26,14 @@ public static class WorldTerrain
         WorldTerrain.seed = seed;
         System.Random random = new System.Random(seed);
         Debug.Log("seed=" + seed);
-        if (version == 1)
+        if (!use3D)
         {
             elevationSeed = random.Next();
             roughnessSeed = random.Next();
             detailSeed = random.Next();
-            elevationNoise = new PerlinNoise(elevationSeed);
-            roughnessNoise = new PerlinNoise(roughnessSeed);
-            detailNoise = new PerlinNoise(detailSeed);
+            elevationNoise = new PerlinNoiseBounded(elevationSeed, 100,100);
+            roughnessNoise = new PerlinNoiseBounded(roughnessSeed, 100, 100);
+            detailNoise = new PerlinNoiseBounded(detailSeed, 1000, 1000);
             Debug.Log("elevationSeed=" + elevationSeed);
             Debug.Log("roughnessSeed=" + roughnessSeed);
             Debug.Log("detailSeed=" + detailSeed);
@@ -46,17 +48,21 @@ public static class WorldTerrain
 
     public static BlockID GetBlock(int x, int y, int z)
     {
-        if (version == 1)
+        if (!use3D)
         {
-            float elevation = elevationNoise.GetNoise(x / 100f, z / 100f) / 2;
-            float roughness = roughnessNoise.GetNoise(x / 100f, z / 100f) / 4;
-            float detail = detailNoise.GetNoise(x / 10f, z / 10f);
+            float elevation = elevationNoise.GetNoise(x / 100f + 50, z / 100f + 50) / 2;
+            float roughness = roughnessNoise.GetNoise(x / 100f + 50, z / 100f + 50) / 4;
+            float detail = detailNoise.GetNoise(x / 20f + 500, z / 20f + 500);
             int height = Mathf.FloorToInt((elevation + (roughness * detail)) * 64 + 64);
 
-            if (y <= height)
-                return BlockID.Stone;
-            else
+            if (y > height)
                 return BlockID.Air;
+            else if (y == height)
+                return BlockID.Grass;
+            else if (y + 5 > height)
+                return BlockID.Dirt;
+            else
+                return BlockID.Stone;
         }
         else
         {

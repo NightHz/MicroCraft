@@ -64,8 +64,6 @@ public class ChunkGen : MonoBehaviour
                     for (int x = 0; x < width; x++)
                         for (int z = 0; z < width; z++)
                             chunk.blocks[x, y, z] = WorldTerrain.GetBlock(x + chunk.position.x, y + chunk.position.y, z + chunk.position.z);
-                    if (y % 6 == 5)
-                        ;// yield return null;
                 }
                 yield return null;
 
@@ -90,7 +88,7 @@ public class ChunkGen : MonoBehaviour
                             if (IsTransparent(x, y - 1, z)) AddBottomFace(x, y, z, BlockList.GetBlock(chunk.blocks[x, y, z]));
                             if (IsTransparent(x, y + 1, z)) AddTopFace(x, y, z, BlockList.GetBlock(chunk.blocks[x, y, z]));
                         }
-                    if (y % 6 == 5)
+                    if (y % 32 == 31)
                         yield return null;
                 }
                 yield return null;
