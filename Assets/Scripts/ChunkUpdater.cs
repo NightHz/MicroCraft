@@ -3,51 +3,53 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 区块生成器，只能被实例化一次
-/// 提交到此处的区块会分配到多帧生成
+/// 区块更新器，只能被实例化一次
+/// 提交到此处的区块会被生成新网格
 /// </summary>
-public class ChunkGen : MonoBehaviour
+public class ChunkUpdater : MonoBehaviour
 {
-    public static readonly int width = 16;
-    public static readonly int height = WorldTerrain.heightMax;
+    static readonly int width = ChunkManager.width;
+    static readonly int height = ChunkManager.height;
 
-    static ChunkGen chunkGen = null;
+    static ChunkUpdater chunkUpdater = null;
 
     Mesh mesh;
     List<Vector3> vertices;
     List<int> triangles;
     List<Vector2> uvs;
-    
+
     Queue<Chunk> chunks = new Queue<Chunk>();
     Chunk chunk;
 
+    [Range(16, 64)]
+    public int workSpeed = 32;
+
     private void Start()
     {
-        if (chunkGen == null)
-            chunkGen = this;
+        if (chunkUpdater == null)
+            chunkUpdater = this;
         else
-            Debug.LogError("ChunkGen同一时间被加载了两次");
-        StartCoroutine(Generate());
+            Debug.LogError("ChunkUpdater同一时间被加载了两次");
+        StartCoroutine(Work());
     }
 
     private void OnDestroy()
     {
-        chunkGen = null;
+        chunkUpdater = null;
     }
 
-    public static void StartGenerate(Chunk chunk)
+    public static void UpdateChunk(Chunk chunk)
     {
-        chunkGen.chunks.Enqueue(chunk);
+        chunkUpdater.chunks.Enqueue(chunk);
+        chunk.state = ChunkState.WaitUpdate;
     }
 
-    public static int AlignChunkXZ(int xz) { return xz / width * width; }
-    public static int AlignChunkXZ(float xz) { return Mathf.FloorToInt(xz) / width * width; }
-    public static int AlignChunkY(int y) { return 0; }
-    public static int AlignChunkY(float y) { return 0; }
-    public static Vector3Int AlignChunk(Vector3Int p) { return new Vector3Int(AlignChunkXZ(p.x), AlignChunkY(p.y), AlignChunkXZ(p.z)); }
-    public static Vector3Int AlignChunk(Vector3 p) { return new Vector3Int(AlignChunkXZ(p.x), AlignChunkY(p.y), AlignChunkXZ(p.z)); }
+    public static int Count()
+    {
+        return chunkUpdater.chunks.Count;
+    }
 
-    IEnumerator Generate()
+    IEnumerator Work()
     {
         while (true)
         {
@@ -56,17 +58,9 @@ public class ChunkGen : MonoBehaviour
             else
             {
                 chunk = chunks.Dequeue();
-
-                // GenerateChunk
-                chunk.blocks = new BlockID[width, height, width];
-                for (int y = 0; y < height; y++)
-                {
-                    for (int x = 0; x < width; x++)
-                        for (int z = 0; z < width; z++)
-                            chunk.blocks[x, y, z] = WorldTerrain.GetBlock(x + chunk.position.x, y + chunk.position.y, z + chunk.position.z);
-                }
-                yield return null;
-
+                if (chunk.state == ChunkState.Destroy)
+                    continue;
+                chunk.state = ChunkState.UpdateIsWorking;
                 // GenerateMesh
                 mesh = new Mesh();
                 vertices = new List<Vector3>();
@@ -88,12 +82,11 @@ public class ChunkGen : MonoBehaviour
                             if (IsTransparent(x, y - 1, z)) AddBottomFace(x, y, z, BlockList.GetBlock(chunk.blocks[x, y, z]));
                             if (IsTransparent(x, y + 1, z)) AddTopFace(x, y, z, BlockList.GetBlock(chunk.blocks[x, y, z]));
                         }
-                    if (y % 32 == 31)
+                    if (y % workSpeed == 0)
                         yield return null;
                 }
                 yield return null;
                 mesh.name = "ChunkMesh " + vertices.Count + " verts";
-                chunk.name += " " + mesh.name;
                 if (vertices.Count > ushort.MaxValue)
                     mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
                 mesh.vertices = vertices.ToArray();
@@ -103,14 +96,9 @@ public class ChunkGen : MonoBehaviour
                 mesh.RecalculateNormals();
                 chunk.GetComponent<MeshFilter>().mesh = mesh;
                 chunk.GetComponent<MeshCollider>().sharedMesh = mesh;
-                mesh = null;
-                vertices = null;
-                triangles = null;
-                uvs = null;
 
-                Debug.Log("完成生成:" + chunk.name);
-                chunk.isFinished = true;
-                chunk = null;
+                Debug.Log("完成区块更新:" + chunk.name);
+                chunk.state = ChunkState.Working;
                 yield return null;
             }
         }
@@ -214,4 +202,3 @@ public class ChunkGen : MonoBehaviour
         uvs.Add(new Vector2(block.bottomU, block.bottomV2));
     }
 }
-

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// default direction is up
 public enum BlockDirection : byte
 {
     UP = 0,
@@ -13,46 +12,60 @@ public enum BlockDirection : byte
     WEST = 5
 }
 
+public struct ChunkData
+{
+    public BlockID[,,] blocks;
+    // public BlockDirection[,,] up; // default is up
+    // public BlockDirection[,,] front; // default is south
+}
+
+public enum ChunkState : byte
+{
+    WaitGenerate = 0,
+    GenerateIsWorking = 1,
+    WaitUpdate = 2,
+    UpdateIsWorking = 3,
+    Working = 4,
+    Destroy = 5
+}
+
 /// <summary>
 /// 区块
 /// </summary>
 public class Chunk : MonoBehaviour
 {
-    [HideInInspector]
-    public bool isFinished = false;
+    [HideInInspector] public ChunkState state;
     //bool isDirty = false;
-    [HideInInspector]
-    public Vector3Int position;
-    [HideInInspector]
-    public BlockID[,,] blocks;
-    //public BlockDirection[,,] directions;
 
-    GameObject player;
+    [HideInInspector] public Vector3Int position;
+    [HideInInspector] public BlockID[,,] blocks;
+    //public BlockDirection[,,] up; // default is up
+    //public BlockDirection[,,] front; // default is south
+
+    [HideInInspector] public GameObject player;
 
     private void Start()
     {
         position = new Vector3Int(Mathf.FloorToInt(transform.position.x), Mathf.FloorToInt(transform.position.y), Mathf.FloorToInt(transform.position.z));
         name = "(" + position.x + "," + position.y + "," + position.z + ")";
 
-        ChunkGen.StartGenerate(this);
-
-        player = GameObject.FindGameObjectWithTag("Player");
+        state = ChunkState.WaitGenerate;
+        ChunkManager.StartGenerate(this);
     }
 
     private void Update()
     {
-        // 未完成生成直接返回
-        if (!isFinished)
+        if (state == ChunkState.GenerateIsWorking || state == ChunkState.UpdateIsWorking)
             return;
 
         // 距离足够大，进行销毁
-        float disX = position.x + ChunkGen.width / 2 - player.transform.position.x;
-        float disZ = position.z + ChunkGen.width / 2 - player.transform.position.z;
+        float disX = position.x + ChunkManager.width / 2 - player.transform.position.x;
+        float disZ = position.z + ChunkManager.width / 2 - player.transform.position.z;
         if (disX * disX + disZ * disZ > World.minDistanceDes * World.minDistanceDes)
         {
-            Debug.Log("销毁区块:(" + position.x + ", " + position.y + ", " + position.z + ")");
-            World.DestroyChunk(position);
             Destroy(gameObject);
+            state = ChunkState.Destroy;
+            ChunkManager.DestroyChunk(position);
         }
     }
 }

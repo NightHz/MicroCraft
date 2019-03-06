@@ -290,3 +290,80 @@ public class PerlinNoiseBounded
     }
 }
 
+public class PerlinNoise3Bounded
+{
+    int seed;
+    System.Random random;
+    Vector3[,,] grads;
+
+    public PerlinNoise3Bounded(int seed, int xSize, int ySize, int zSize)
+    {
+        this.seed = seed;
+        random = new System.Random(seed);
+        grads = new Vector3[xSize, ySize, zSize];
+        for (int x = 0; x < xSize; x++)
+            for (int y = 0; y < ySize; y++)
+                for (int z = 0; z < zSize; z++)
+                    grads[x, y, z] = RandomGradient();
+    }
+
+    // 计算格点梯度
+    Vector3 RandomGradient()
+    {
+        while (true)
+        {
+            float gx = (float)random.NextDouble() * 2 - 1;
+            float gy = (float)random.NextDouble() * 2 - 1;
+            float gz = (float)random.NextDouble() * 2 - 1;
+            Vector3 g = new Vector3(gx, gy,gz);
+            float length = g.magnitude;
+            if (length > 1 || length < 0.1f)
+                continue;
+            else
+                return g / length;
+        }
+    }
+
+    // 计算距离向量与格点梯度的点积
+    float DotGridGradient(int ix, int iy, int iz, float x, float y, float z)
+    {
+        float dx = x - ix, dy = y - iy, dz = z - iz;
+        Vector3 g = grads[ix, iy, iz];
+        return (dx * g.x + dy * g.y + dz * g.z);
+    }
+
+    // 缓动函数
+    static float Fade(float t)
+    {
+        return t * t * t * (10 + t * (-15 + t * 6)); // 6*t^5 - 15*t^4 + 10*t^3
+    }
+
+    /// <summary>
+    /// 返回值在 -1.0 到 1.0 之间
+    /// </summary>
+    public float GetNoise(float x, float y, float z)
+    {
+        int xi = Mathf.FloorToInt(x);
+        int yi = Mathf.FloorToInt(y);
+        int zi = Mathf.FloorToInt(z);
+        float xf = Fade(x - xi);
+        float yf = Fade(y - yi);
+        float zf = Fade(z - zi);
+        float n0, n1, n2, n3, n4, n5;
+        n0 = DotGridGradient(xi, yi, zi, x, y, z);
+        n1 = DotGridGradient(xi + 1, yi, zi, x, y, z);
+        n2 = Mathf.Lerp(n0, n1, xf);
+        n0 = DotGridGradient(xi, yi + 1, zi, x, y, z);
+        n1 = DotGridGradient(xi + 1, yi + 1, zi, x, y, z);
+        n3 = Mathf.Lerp(n0, n1, xf);
+        n4 = Mathf.Lerp(n2, n3, yf);
+        n0 = DotGridGradient(xi, yi, zi + 1, x, y, z);
+        n1 = DotGridGradient(xi + 1, yi, zi + 1, x, y, z);
+        n2 = Mathf.Lerp(n0, n1, xf);
+        n0 = DotGridGradient(xi, yi + 1, zi + 1, x, y, z);
+        n1 = DotGridGradient(xi + 1, yi + 1, zi + 1, x, y, z);
+        n3 = Mathf.Lerp(n0, n1, xf);
+        n5 = Mathf.Lerp(n2, n3, yf);
+        return Mathf.Lerp(n4, n5, zf);
+    }
+}
