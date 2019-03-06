@@ -10,7 +10,9 @@ public class CameraController : MonoBehaviour
     public float minElevationAngle = -80f;
 
     public float eyeOffset = 0.6f;
-    public float tpsOffset = 8f;
+    public float thirdPersonOffset = 8f;
+
+    public bool isThirdPerson = false;
 
     private void Update()
     {
@@ -26,11 +28,12 @@ public class CameraController : MonoBehaviour
 
         transform.Rotate(Vector3.up * rotationAngleX - transform.right * rotationAngleY, Space.World);
 
-        // 第一人称
-        //transform.position = player.position + Vector3.up * eyeOffset;
-
-        // 第三人称
-        transform.position = player.position + Vector3.up * eyeOffset - transform.forward * tpsOffset;
+        if (!isThirdPerson)
+            // 第一人称
+            transform.position = player.position + Vector3.up * eyeOffset;
+        else
+            // 第三人称
+            transform.position = player.position + Vector3.up * eyeOffset - transform.forward * thirdPersonOffset;
     }
 
 }

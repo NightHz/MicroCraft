@@ -4,12 +4,12 @@ using UnityEngine;
 
 public enum BlockDirection : byte
 {
-    UP = 0,
-    DOWN = 1,
-    NORTH = 2,
-    SOUTH = 3,
-    EAST = 4,
-    WEST = 5
+    UP = 0,    // 默认顶面
+    DOWN = 1,  // 默认底面
+    NORTH = 2, // 默认后面
+    SOUTH = 3, // 默认前面
+    EAST = 4,  // 默认右面
+    WEST = 5   // 默认左面
 }
 
 public struct ChunkData
@@ -31,9 +31,16 @@ public enum ChunkState : byte
 
 /// <summary>
 /// 区块
+/// 上层ChunkManager
+/// 1.被实例化后将自身递交给上层生成数据
+/// 2.距离过大摧毁自身并报告上层
+/// 3.可以设置方块
 /// </summary>
 public class Chunk : MonoBehaviour
 {
+    static readonly int width = ChunkManager.width;
+    static readonly int height = ChunkManager.height;
+
     [HideInInspector] public ChunkState state;
     //bool isDirty = false;
 
@@ -66,6 +73,29 @@ public class Chunk : MonoBehaviour
             Destroy(gameObject);
             state = ChunkState.Destroy;
             ChunkManager.DestroyChunk(position);
+        }
+    }
+
+    public void SetBlock(Vector3Int pos, BlockID id)
+    {
+        SetBlock(pos.x, pos.y, pos.z, id);
+    }
+
+    public void SetBlock(int x, int y, int z, BlockID id)
+    {
+        if (state == ChunkState.Working)
+        {
+            if (y < 0 || y >= height)
+                // 超出界限
+                return;
+            else if (x < 0 || z < 0 || x >= width || z >= width)
+                // 不在此区块内，递交给上层处理
+                ChunkManager.SetBlock(new Vector3Int(x, y, z) + position, id);
+            else
+            {
+                blocks[x, y, z] = id;
+                ChunkUpdater.UpdateChunk(this);
+            }
         }
     }
 }

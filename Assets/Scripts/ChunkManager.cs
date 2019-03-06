@@ -4,7 +4,7 @@ using UnityEngine;
 
 /// <summary>
 /// 只能被实例化一次
-/// 生成区块，管理已有区块，管理脏区块
+/// 生成区块，管理已有区块，管理脏区块，设置方块
 /// </summary>
 public class ChunkManager : MonoBehaviour
 {
@@ -38,9 +38,9 @@ public class ChunkManager : MonoBehaviour
         chunkManager = null;
     }
 
-
-    public static int AlignChunkXZ(int xz) { return xz / width * width; }
-    public static int AlignChunkXZ(float xz) { return Mathf.FloorToInt(xz) / width * width; }
+    
+    public static int AlignChunkXZ(int xz) { if (xz >= 0) return xz / width * width; else return (xz + 1) / width * width - width; }
+    public static int AlignChunkXZ(float xz) { return AlignChunkXZ(Mathf.FloorToInt(xz)); }
     public static int AlignChunkY(int y) { return 0; }
     public static int AlignChunkY(float y) { return 0; }
     public static Vector3Int AlignChunk(Vector3Int p) { return new Vector3Int(AlignChunkXZ(p.x), AlignChunkY(p.y), AlignChunkXZ(p.z)); }
@@ -97,6 +97,26 @@ public class ChunkManager : MonoBehaviour
     public static int Count()
     {
         return chunkManager.chunks.Count;
+    }
+
+    public static void SetBlock(Vector3Int pos, BlockID id)
+    {
+        Vector3Int chunkPos = AlignChunk(pos);
+        if(chunkManager.chunks.ContainsKey(chunkPos))
+        {
+            Vector3Int blockPos = pos - chunkPos;
+            if (blockPos.x < 0 || blockPos.z < 0 || blockPos.x >= width || blockPos.z >= width)
+            {
+                Debug.LogError("chunkPos" + chunkPos + "pos" + pos + "blockPos" + blockPos);
+                return;
+            }
+            chunkManager.chunks[chunkPos].GetComponent<Chunk>().SetBlock(pos - chunkPos, id);
+        }
+    }
+
+    public static void SetBlock(int x, int y, int z, BlockID id)
+    {
+        SetBlock(new Vector3Int(x, y, z), id);
     }
 
     IEnumerator Work()
