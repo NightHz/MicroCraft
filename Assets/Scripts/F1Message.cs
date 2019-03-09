@@ -10,6 +10,7 @@ public class F1Message : MonoBehaviour
     int fps;
     string strFps;
     string strUpdateChunkCount;
+    string strChunkCount;
 
     // Start is called before the first frame update
     void Start()
@@ -31,7 +32,8 @@ public class F1Message : MonoBehaviour
             fps = 0;
         }
         int chunkGenCount = ChunkManager.CountGenQueue();
+        strChunkCount = ChunkManager.Count() + " chunks load";
         strUpdateChunkCount = (ChunkUpdater.Count() + chunkGenCount) + "(" + chunkGenCount + ")" + " chunks update";
-        text.text = strFps + "\n" + strUpdateChunkCount;
+        text.text = strFps + "\n" + strChunkCount + "\n" + strUpdateChunkCount;
     }
 }
