@@ -144,11 +144,13 @@ public class ChunkManager : MonoBehaviour
                     {
                         for (int x = 0; x < width; x++)
                             for (int z = 0; z < width; z++)
-                                blocks[x, y, z] = WorldTerrain.GetBlock(x + chunk.position.x, y + chunk.position.y, z + chunk.position.z);
+                                blocks[x, y, z] = WorldTerrain.GetBaseBlock(x + chunk.position.x, y + chunk.position.y, z + chunk.position.z);
                         if (y % workSpeed == 0)
                             yield return null;
                     }
                     chunk.blocks = blocks;
+                    yield return null;
+                    WorldTerrain.DecorateChunk(blocks);
                 }
                 // Submit to Updater
                 ChunkUpdater.UpdateChunk(chunk);

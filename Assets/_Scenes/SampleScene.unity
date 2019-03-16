@@ -448,8 +448,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 4691600}
-  maxElevationAngle: 80
-  minElevationAngle: -80
+  maxElevationAngle: 89.5
+  minElevationAngle: -89.5
   eyeOffset: 0.6
   thirdPersonOffset: 8
   isThirdPerson: 0
@@ -741,7 +741,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 352c18adfb6a5c241a7b00f4df9bed95, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  seed: 0
+  seed: 12
 --- !u!114 &1206002013
 MonoBehaviour:
   m_ObjectHideFlags: 0

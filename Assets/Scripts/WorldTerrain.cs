@@ -59,7 +59,7 @@ public static class WorldTerrain
         return BiomeID.Plains;
     }
 
-    public static BlockID GetBlock(int x, int y, int z)
+    public static BlockID GetBaseBlock(int x, int y, int z)
     {
         float ocean = oceanNoise.GetNoise(x / 500f, z / 500f);
         float density = densityNoise.GetNoise(x / 50f, y / 50f, z / 50f);
@@ -75,5 +75,38 @@ public static class WorldTerrain
             return BlockID.Ice;
         else
             return BlockID.Air;
+    }
+
+    public static void DecorateChunk(BlockID[,,] blocks)
+    {
+        for (int x = 0; x < chunkWidth; x++)
+            for (int z = 0; z < chunkWidth; z++)
+            {
+                int height = -1;
+                bool isWater = false;
+                for (int y = heightMax - 1; y >= 0; y--)
+                {
+                    if (blocks[x, y, z] == BlockID.Ice)
+                        isWater = true;
+                    else if (blocks[x, y, z] != BlockID.Air)
+                    {
+                        height = y;
+                        break;
+                    }
+                }
+                if (isWater)
+                {
+                    for (int i = 0; i < 5; i++)
+                        blocks[x, height - i, z] = BlockID.Sand;
+                }
+                else
+                {
+                    blocks[x, height, z] = BlockID.Grass;
+                    for (int i = 1; i < 5; i++)
+                        blocks[x, height - i, z] = BlockID.Dirt;
+                }
+                for (int y = 0; y < 3; y++)
+                    blocks[x, y, z] = BlockID.Bedrock;
+            }
     }
 }
