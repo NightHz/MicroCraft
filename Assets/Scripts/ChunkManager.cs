@@ -3,162 +3,160 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 只能被实例化一次
-/// 生成区块，管理已有区块，管理脏区块，设置方块
+/// 生成区块，管理已有区块，设置方块
 /// </summary>
-public class ChunkManager : MonoBehaviour
+public class ChunkManager
 {
-    public static readonly int width = WorldTerrain.chunkWidth;
-    public static readonly int height = WorldTerrain.heightMax;
+    // 上层
+    World world;
 
-    static ChunkManager chunkManager = null;
+    Transform playerTransform;
 
-    GameObject player;
-    public GameObject chunkPrefab;
-
-    Queue<Chunk> chunksGen = new Queue<Chunk>();
-    Dictionary<Vector3Int, GameObject> chunks = new Dictionary<Vector3Int, GameObject>();
-    Dictionary<Vector3Int, ChunkData> dirtyChunks = new Dictionary<Vector3Int, ChunkData>();
-
-    [Range(16, 64)]
-    public int workSpeed = 32;
-
-    private void Start()
+    Dictionary<Vector3Int, Chunk> chunks;
+    public int ChunkCount
     {
-        if (chunkManager == null)
-            chunkManager = this;
-        else
-            Debug.LogError("ChunkManager同一时间被加载了两次");
-        player = GameObject.FindGameObjectWithTag("Player");
-        StartCoroutine(Work());
+        get { return chunks.Count; }
     }
 
-    private void OnDestroy()
+    int chunkWaitUpdateCount;
+    public int ChunkWaitUpdateCount
     {
-        chunkManager = null;
-    }
-
-    
-    public static int AlignChunkXZ(int xz) { if (xz >= 0) return xz / width * width; else return (xz + 1) / width * width - width; }
-    public static int AlignChunkXZ(float xz) { return AlignChunkXZ(Mathf.FloorToInt(xz)); }
-    public static int AlignChunkY(int y) { return 0; }
-    public static int AlignChunkY(float y) { return 0; }
-    public static Vector3Int AlignChunk(Vector3Int p) { return new Vector3Int(AlignChunkXZ(p.x), AlignChunkY(p.y), AlignChunkXZ(p.z)); }
-    public static Vector3Int AlignChunk(Vector3 p) { return new Vector3Int(AlignChunkXZ(p.x), AlignChunkY(p.y), AlignChunkXZ(p.z)); }
-
-
-    private void Update()
-    {
-        // 对足够近的未生成区块进行生成
-        Vector3Int chunkPos = new Vector3Int();
-        chunkPos.y = 0;
-        float dis = World.maxDistanceGen;
-        for (int x = AlignChunkXZ(player.transform.position.x - dis) - width; x < player.transform.position.x + dis; x += width)
+        get
         {
-            chunkPos.x = x;
-            for (int z = AlignChunkXZ(player.transform.position.z - dis) - width; z < player.transform.position.z + dis; z += width)
+            if (chunkWaitUpdateCount == -1)
             {
-                chunkPos.z = z;
-                if (!chunks.ContainsKey(chunkPos))
+                chunkWaitUpdateCount = 0;
+                foreach (KeyValuePair<Vector3Int, Chunk> pair in chunks)
                 {
-                    float disX = x + width / 2 - player.transform.position.x;
-                    float disZ = z + width / 2 - player.transform.position.z;
-                    if (disX * disX + disZ * disZ < dis * dis)
-                        GenerateChunk(x, 0, z);
+                    Chunk chunk2 = pair.Value;
+                    if (chunk2.State < ChunkState.Working)
+                        chunkWaitUpdateCount++;
                 }
             }
+            return chunkWaitUpdateCount;
         }
     }
 
-    void GenerateChunk(int x, int y, int z)
+    int workSpeed;
+    
+    public ChunkManager(World world)
     {
-        Debug.Log("开始生成区块:(" + x + "," + 0 + "," + z + ")");
-        GameObject chunk = Instantiate(chunkPrefab, new Vector3(x, y, z), Quaternion.identity, transform);
-        chunks.Add(new Vector3Int(x, y, z), chunk);
+        this.world = world;
+        playerTransform = world.player.transform;
+        chunks = new Dictionary<Vector3Int, Chunk>();
+        chunkWaitUpdateCount = -1;
+        workSpeed = 16;
     }
 
-    public static void StartGenerate(Chunk chunk)
+    void UpdateChunk(Chunk chunk)
     {
-        chunk.player = chunkManager.player;
-        chunkManager.chunksGen.Enqueue(chunk);
+        chunk.Update(workSpeed);
+        //Debug.Log("Update Chunk: " + chunk.Position);
     }
 
-    public static void DestroyChunk(Vector3Int position)
+    public void UpdateChunk(bool distanceFirst = true)
     {
-        Debug.Log("销毁区块:" + position);
-        chunkManager.chunks.Remove(position);
-    }
-
-    public static int CountGenQueue()
-    {
-        return chunkManager.chunksGen.Count;
-    }
-
-    public static int Count()
-    {
-        return chunkManager.chunks.Count;
-    }
-
-    public static void SetBlock(Vector3Int pos, BlockID id)
-    {
-        Vector3Int chunkPos = AlignChunk(pos);
-        if(chunkManager.chunks.ContainsKey(chunkPos))
+        if (distanceFirst)
         {
-            Vector3Int blockPos = pos - chunkPos;
-            if (blockPos.x < 0 || blockPos.z < 0 || blockPos.x >= width || blockPos.z >= width)
+            Chunk chunk = null;
+            // 检查玩家所在区块
+            Vector3Int playerChunkPosition = Chunk.AlignChunk(playerTransform.position);
+            if (chunks.ContainsKey(playerChunkPosition) && (chunk = chunks[playerChunkPosition]).State < ChunkState.Working)
             {
-                Debug.LogError("chunkPos" + chunkPos + "pos" + pos + "blockPos" + blockPos);
+                UpdateChunk(chunk);
+                chunkWaitUpdateCount = -1;
                 return;
             }
-            chunkManager.chunks[chunkPos].GetComponent<Chunk>().SetBlock(pos - chunkPos, id);
-        }
-    }
 
-    public static void SetBlock(int x, int y, int z, BlockID id)
-    {
-        SetBlock(new Vector3Int(x, y, z), id);
-    }
-
-    IEnumerator Work()
-    {
-        while (true)
-        {
-            if (chunksGen.Count == 0)
-                yield return null;
-            else
+            // 找到最近的待更新区块
+            float distance = float.MaxValue;
+            chunkWaitUpdateCount = 0;
+            foreach (KeyValuePair<Vector3Int, Chunk> pair in chunks)
             {
-                Chunk chunk = chunksGen.Dequeue();
-                if (chunk.state == ChunkState.Destroy)
-                    continue;
-                chunk.state = ChunkState.GenerateIsWorking;
-
-                // Generate
-                if (dirtyChunks.ContainsKey(chunk.position))
+                Chunk chunk2 = pair.Value;
+                if (chunk2.State < ChunkState.Working)
                 {
-                    chunk.blocks = dirtyChunks[chunk.position].blocks;
-                }
-                else
-                {
-                    BlockID[,,] blocks = new BlockID[width, height, width];
-                    for (int y = 0; y < height; y++)
+                    chunkWaitUpdateCount++;
+                    float d = (chunk2.Position + Chunk.centerPosOffset - playerTransform.position).magnitude;
+                    if (d < distance)
                     {
-                        for (int x = 0; x < width; x++)
-                            for (int z = 0; z < width; z++)
-                                blocks[x, y, z] = WorldTerrain.GetBaseBlock(x + chunk.position.x, y + chunk.position.y, z + chunk.position.z);
-                        if (y % workSpeed == 0)
-                            yield return null;
+                        chunk = chunk2;
+                        distance = d;
                     }
-                    chunk.blocks = blocks;
-                    yield return null;
-                    WorldTerrain.DecorateChunk(blocks);
                 }
-                // Submit to Updater
-                ChunkUpdater.UpdateChunk(chunk);
-                // Finish
-                Debug.Log("生成:" + chunk.name);
-                yield return null;
+            }
+            if (distance != float.MaxValue)
+            {
+                UpdateChunk(chunk);
+                return;
             }
         }
+        else
+        {
+            // 找到任意一个待更新区块
+            foreach (KeyValuePair<Vector3Int, Chunk> pair in chunks)
+            {
+                Chunk chunk = pair.Value;
+                if (chunk.State < ChunkState.Working)
+                {
+                    UpdateChunk(chunk);
+                    return;
+                }
+            }
+        }
+    }
+
+    public void ActivateChunk(Vector3Int chunkPosition)
+    {
+        if (chunks.ContainsKey(chunkPosition))
+        {
+            Chunk chunk = chunks[chunkPosition];
+            if (!chunk.Active)
+                chunk.Active = true;
+        }
+        else
+        {
+            CreateChunk(chunkPosition);
+        }
+    }
+
+    void CreateChunk(Vector3Int chunkPosition)
+    {
+        Chunk newChunk = new Chunk(world, chunkPosition);
+        chunks.Add(chunkPosition, newChunk);
+    }
+
+    public void DeactivateChunk(Vector3Int chunkPosition)
+    {
+        Chunk chunk;
+        if (chunks.ContainsKey(chunkPosition) && (chunk = chunks[chunkPosition]).Active)
+        {
+            chunk.Active = false;
+        }
+    }
+
+    public void DestroyChunk(Vector3Int chunkPosition)
+    {
+        if (chunks.ContainsKey(chunkPosition))
+        {
+            Chunk chunk = chunks[chunkPosition];
+            chunk.Destroy();
+            chunks.Remove(chunkPosition);
+        }
+    }
+    
+    public void SetBlock(Vector3Int blockPosition, BlockID id)
+    {
+        Vector3Int chunkPosition = Chunk.AlignChunk(blockPosition);
+        if(chunks.ContainsKey(chunkPosition))
+        {
+            chunks[chunkPosition].SetBlock(blockPosition, id);
+        }
+    }
+
+    public void SetBlock(int x, int y, int z, BlockID id)
+    {
+        SetBlock(new Vector3Int(x, y, z), id);
     }
 }
 

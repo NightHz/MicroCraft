@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class F1Message : MonoBehaviour
 {
+    public World world;
     Text text;
     float timer;
     int fps;
@@ -31,9 +32,8 @@ public class F1Message : MonoBehaviour
             timer -= 0.5f;
             fps = 0;
         }
-        int chunkGenCount = ChunkManager.CountGenQueue();
-        strChunkCount = ChunkManager.Count() + " chunks load";
-        strUpdateChunkCount = (ChunkUpdater.Count() + chunkGenCount) + "(" + chunkGenCount + ")" + " chunks update";
+        strChunkCount = world.chunkManager.ChunkCount + " chunks load";
+        strUpdateChunkCount = world.chunkManager.ChunkWaitUpdateCount + " chunks in update list";
         text.text = strFps + "\n" + strChunkCount + "\n" + strUpdateChunkCount;
     }
 }

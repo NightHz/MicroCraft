@@ -65,18 +65,18 @@ public class PlayerOperate : MonoBehaviour
                     selectionFaceX.transform.position = new Vector3(block.x - offset, block.y + 0.5f, block.z + 0.5f);
                 }
             }
-            if (Input.GetMouseButtonDown(0))
-            {
-                Chunk chunk = raycastHit.collider.gameObject.GetComponent<Chunk>();
-                Debug.Log("chunk:" + chunk.position + " block:" + block + "to Air");
-                chunk.SetBlock(block - chunk.position, BlockID.Air);
-            }
-            else if (Input.GetMouseButtonDown(1))
-            {
-                Chunk chunk = raycastHit.collider.gameObject.GetComponent<Chunk>();
-                Debug.Log("chunk:" + chunk.position + " block:" + blockAdd + "to Stone");
-                chunk.SetBlock(blockAdd - chunk.position, BlockID.Stone);
-            }
+            //if (Input.GetMouseButtonDown(0))
+            //{
+            //    Chunk chunk = raycastHit.collider.gameObject.GetComponent<Chunk>();
+            //    Debug.Log("chunk:" + chunk.position + " block:" + block + "to Air");
+            //    chunk.SetBlock(block - chunk.position, BlockID.Air);
+            //}
+            //else if (Input.GetMouseButtonDown(1))
+            //{
+            //    Chunk chunk = raycastHit.collider.gameObject.GetComponent<Chunk>();
+            //    Debug.Log("chunk:" + chunk.position + " block:" + blockAdd + "to Stone");
+            //    chunk.SetBlock(blockAdd - chunk.position, BlockID.Stone);
+            //}
         }
     }
 }

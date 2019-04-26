@@ -363,7 +363,6 @@ GameObject:
   - component: {fileID: 534669904}
   - component: {fileID: 534669903}
   - component: {fileID: 534669906}
-  - component: {fileID: 534669907}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -453,21 +452,6 @@ MonoBehaviour:
   eyeOffset: 0.6
   thirdPersonOffset: 8
   isThirdPerson: 0
---- !u!114 &534669907
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 534669902}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fda0f9543aa776c44bce58eac115d1fe, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  selectionFaceX: {fileID: 704375176}
-  selectionFaceY: {fileID: 724565154}
-  selectionFaceZ: {fileID: 128430159}
 --- !u!1 &672393179
 GameObject:
   m_ObjectHideFlags: 0
@@ -706,11 +690,9 @@ GameObject:
   m_Component:
   - component: {fileID: 1206002011}
   - component: {fileID: 1206002012}
-  - component: {fileID: 1206002014}
-  - component: {fileID: 1206002013}
   m_Layer: 0
   m_Name: World
-  m_TagString: Untagged
+  m_TagString: World
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -742,34 +724,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   seed: 12
---- !u!114 &1206002013
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1206002010}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bb29a63059d2d934aa6c015a74eadbdc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  workSpeed: 32
---- !u!114 &1206002014
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1206002010}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4dbeb63cbc42ca44a953c402bd7b3e30, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  chunkPrefab: {fileID: 888325883864077994, guid: b0b3763b927555c43b372515b954bfda,
-    type: 3}
-  workSpeed: 16
+  player: {fileID: 4691598}
+  chunkMaterial: {fileID: 2100000, guid: e56a61873e368ec49b6a9cea74e4099e, type: 2}
 --- !u!1 &1682268768
 GameObject:
   m_ObjectHideFlags: 0
@@ -1061,6 +1017,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e0c141d486c749e46a3b7ecb5a31a347, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  world: {fileID: 1206002012}
 --- !u!114 &1821236771
 MonoBehaviour:
   m_ObjectHideFlags: 0
