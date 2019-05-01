@@ -13,70 +13,89 @@ public class ChunkManager
     Transform playerTransform;
 
     Dictionary<Vector3Int, Chunk> chunks;
+    List<Chunk> chunkWaitUpdateList;
     public int ChunkCount
     {
         get { return chunks.Count; }
     }
-
-    int chunkWaitUpdateCount;
+    
     public int ChunkWaitUpdateCount
     {
-        get
-        {
-            if (chunkWaitUpdateCount == -1)
-            {
-                chunkWaitUpdateCount = 0;
-                foreach (KeyValuePair<Vector3Int, Chunk> pair in chunks)
-                {
-                    Chunk chunk2 = pair.Value;
-                    if (chunk2.State < ChunkState.Working)
-                        chunkWaitUpdateCount++;
-                }
-            }
-            return chunkWaitUpdateCount;
-        }
+        get { return chunkWaitUpdateList.Count; }
     }
 
-    int workSpeed;
+    int workNSpeed;
+    int workYSpeed;
     
     public ChunkManager(World world)
     {
         this.world = world;
         playerTransform = world.player.transform;
         chunks = new Dictionary<Vector3Int, Chunk>();
-        chunkWaitUpdateCount = -1;
-        workSpeed = 16;
+        chunkWaitUpdateList = new List<Chunk>();
+        workNSpeed = 1;
+        workYSpeed = 16;
+    }
+
+    public void UpdateChunkUpdateList()
+    {
+        chunkWaitUpdateList.Clear();
+        foreach (KeyValuePair<Vector3Int, Chunk> pair in chunks)
+        {
+            Chunk chunk = pair.Value;
+            if (chunk.State < ChunkState.Working)
+            {
+                chunkWaitUpdateList.Add(chunk);
+            }
+        }
     }
 
     void UpdateChunk(Chunk chunk)
     {
-        chunk.Update(workSpeed);
+        if (chunk.Update(workYSpeed))
+            chunkWaitUpdateList.Remove(chunk);
         //Debug.Log("Update Chunk: " + chunk.Position);
     }
 
     public void UpdateChunk(bool distanceFirst = true)
     {
+        // 检查位置
+        Vector3 playerPos = world.player.transform.position;
+        List<Vector3Int> removeList = new List<Vector3Int>();
+        foreach (KeyValuePair<Vector3Int, Chunk> pair in chunks)
+        {
+            Chunk chunk = pair.Value;
+            float d = (chunk.Position + Chunk.centerPosOffset - playerPos).magnitude;
+            if (d > world.minDistanceDes)
+            {
+                chunk.Destroy();
+                removeList.Add(pair.Key);
+            }
+            else if (d > world.minDistanceDea)
+            {
+                if (chunk.Active != false)
+                    chunk.Active = false;
+            }
+            else
+            {
+                if (chunk.Active != true)
+                    chunk.Active = true;
+            }
+        }
+        foreach(Vector3Int pos in removeList)
+        {
+            chunks.Remove(pos);
+        }
+        // 生成方块或网格
         if (distanceFirst)
         {
-            Chunk chunk = null;
-            // 检查玩家所在区块
-            Vector3Int playerChunkPosition = Chunk.AlignChunk(playerTransform.position);
-            if (chunks.ContainsKey(playerChunkPosition) && (chunk = chunks[playerChunkPosition]).State < ChunkState.Working)
+            for (int n = workNSpeed; n > 0; n--)
             {
-                UpdateChunk(chunk);
-                chunkWaitUpdateCount = -1;
-                return;
-            }
-
-            // 找到最近的待更新区块
-            float distance = float.MaxValue;
-            chunkWaitUpdateCount = 0;
-            foreach (KeyValuePair<Vector3Int, Chunk> pair in chunks)
-            {
-                Chunk chunk2 = pair.Value;
-                if (chunk2.State < ChunkState.Working)
+                Chunk chunk = null;
+                // 找到最近的待更新区块
+                float distance = float.MaxValue;
+                foreach (Chunk chunk2 in chunkWaitUpdateList)
                 {
-                    chunkWaitUpdateCount++;
                     float d = (chunk2.Position + Chunk.centerPosOffset - playerTransform.position).magnitude;
                     if (d < distance)
                     {
@@ -84,25 +103,37 @@ public class ChunkManager
                         distance = d;
                     }
                 }
+                if (chunk != null)
+                {
+                    UpdateChunk(chunk);
+                }
             }
-            if (distance != float.MaxValue)
-            {
-                UpdateChunk(chunk);
-                return;
-            }
+            if (ChunkWaitUpdateCount == 0)
+                workNSpeed = 1;
+            // 50帧限定
+            else if (Time.deltaTime < 0.02f)
+                workNSpeed++;
+            else
+                workNSpeed--;
         }
         else
         {
-            // 找到任意一个待更新区块
-            foreach (KeyValuePair<Vector3Int, Chunk> pair in chunks)
+            for (int n = workNSpeed; n > 0; n--)
             {
-                Chunk chunk = pair.Value;
-                if (chunk.State < ChunkState.Working)
+                // 找到任意一个待更新区块
+                foreach (Chunk chunk in chunkWaitUpdateList)
                 {
                     UpdateChunk(chunk);
-                    return;
+                    break;
                 }
             }
+            if (ChunkWaitUpdateCount == 0)
+                workNSpeed = 1;
+            // 20帧限定
+            else if (Time.deltaTime < 0.05f)
+                workNSpeed++;
+            else
+                workNSpeed--;
         }
     }
 
@@ -124,6 +155,7 @@ public class ChunkManager
     {
         Chunk newChunk = new Chunk(world, chunkPosition);
         chunks.Add(chunkPosition, newChunk);
+        chunkWaitUpdateList.Add(newChunk);
     }
 
     public void DeactivateChunk(Vector3Int chunkPosition)
@@ -144,13 +176,25 @@ public class ChunkManager
             chunks.Remove(chunkPosition);
         }
     }
+
+    public void CheckChunk(Vector3Int chunkPosition)
+    {
+        if (chunks.ContainsKey(chunkPosition))
+        {
+            Chunk chunk = chunks[chunkPosition];
+            if (chunk.State < ChunkState.Working && !chunkWaitUpdateList.Contains(chunk))
+                chunkWaitUpdateList.Add(chunk);
+        }
+    }
     
     public void SetBlock(Vector3Int blockPosition, BlockID id)
     {
         Vector3Int chunkPosition = Chunk.AlignChunk(blockPosition);
         if(chunks.ContainsKey(chunkPosition))
         {
-            chunks[chunkPosition].SetBlock(blockPosition, id);
+            Chunk chunk = chunks[chunkPosition];
+            chunk.SetBlock(blockPosition, id);
+            chunkWaitUpdateList.Add(chunk);
         }
     }
 

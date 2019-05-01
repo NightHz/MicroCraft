@@ -4,12 +4,21 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    World world;
     public Transform eye;
     [Range(1.2f,12f)]
     public float speed = 3f;
 
+    private void Start()
+    {
+        world = GameObject.FindGameObjectWithTag("World").GetComponent<World>();
+    }
+
     private void Update()
     {
+        if (world.State != WorldState.Working)
+            return;
+
         float move = speed * Time.deltaTime;
         if (Input.GetKey(KeyCode.A))
             transform.position += Vector3.Cross(eye.forward, Vector3.up).normalized * move;

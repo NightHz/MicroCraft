@@ -85,14 +85,16 @@ public class Chunk
             if (value)
             {
                 active = true;
-                for (int i = 0; i < aspect; i++)
-                    displayUnits[i].meshFilter.mesh = displayUnits[i].mesh;
+                if (displayUnits != null)
+                    for (int i = 0; i < aspect; i++)
+                        displayUnits[i].meshFilter.mesh = displayUnits[i].mesh;
             }
             else
             {
                 active = false;
-                for (int i = 0; i < aspect; i++)
-                    displayUnits[i].meshFilter.mesh = null;
+                if (displayUnits != null)
+                    for (int i = 0; i < aspect; i++)
+                        displayUnits[i].meshFilter.mesh = null;
             }
         }
     }
@@ -159,7 +161,7 @@ public class Chunk
                 if (y2 == height)
                 {
                     // 完成生成
-                    Debug.Log("方块生成完成，pos:" + position);
+                    //Debug.Log("方块生成完成，pos:" + position);
                     world.worldTerrain.DecorateChunk(blocks);
                     state = ChunkState.WaitUpdate;
                     return false;
@@ -183,7 +185,7 @@ public class Chunk
                 if(_update_i == aspect)
                 {
                     // 找不到待更新的显示单元
-                    Debug.Log("更新完成，pos:" + position);
+                    //Debug.Log("更新完成，pos:" + position);
                     state = ChunkState.Working;
                     Active = active;
                     return true;

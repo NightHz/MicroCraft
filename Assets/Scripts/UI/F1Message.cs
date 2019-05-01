@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class F1Message : MonoBehaviour
 {
-    public World world;
+    World world;
     Text text;
     float timer;
     int fps;
@@ -16,6 +16,7 @@ public class F1Message : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        world = GameObject.FindGameObjectWithTag("World").GetComponent<World>();
         text = GetComponent<Text>();
         timer = 0;
         fps = 0;

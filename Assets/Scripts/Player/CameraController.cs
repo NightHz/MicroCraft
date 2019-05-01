@@ -9,6 +9,9 @@ public class CameraController : MonoBehaviour
     public float maxElevationAngle = 80f;
     public float minElevationAngle = -80f;
 
+    float angleX = 0f;
+    float angleY = 30f;
+
     public float eyeOffset = 0.6f;
     public float thirdPersonOffset = 8f;
 
@@ -19,14 +22,11 @@ public class CameraController : MonoBehaviour
         float rotationAngleX = Input.GetAxis("Mouse X");
         float rotationAngleY = Input.GetAxis("Mouse Y");
 
-        float nowElevationAngle = 90f - Vector3.SignedAngle(Vector3.up, transform.forward, transform.right);
+        angleX += rotationAngleX;
+        angleY -= rotationAngleY;
+        angleY = Mathf.Clamp(angleY, minElevationAngle, maxElevationAngle);
 
-        float MaxRotationAngleY = maxElevationAngle - nowElevationAngle;
-        float MinRotationAngleY = minElevationAngle - nowElevationAngle;
-
-        rotationAngleY = Mathf.Clamp(rotationAngleY, MinRotationAngleY, MaxRotationAngleY);
-
-        transform.Rotate(Vector3.up * rotationAngleX - transform.right * rotationAngleY, Space.World);
+        transform.rotation = Quaternion.Euler(angleY, angleX, 0);
 
         if (!isThirdPerson)
             // 第一人称
