@@ -18,7 +18,7 @@ public class WorldLoadSliderController : MonoBehaviour
 
     private void Update()
     {
-        if (world.State == WorldState.Init)
+        if (world.State == WorldState.Loading)
         {
             float v = 1f - (float)world.chunkManager.ChunkWaitUpdateCount / world.chunkManager.ChunkCount;
             if (slider.value < v)

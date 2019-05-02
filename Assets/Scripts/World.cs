@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum WorldState : byte
 {
-    Init,
+    Loading,
     Working
 }
 
@@ -30,7 +30,7 @@ public class World : MonoBehaviour
 
     private void Start()
     {
-        state = WorldState.Init;
+        state = WorldState.Loading;
         worldTerrain = new WorldTerrain(seed.GetHashCode());
         chunkManager = new ChunkManager(this);
 
@@ -54,7 +54,7 @@ public class World : MonoBehaviour
     {
         switch(state)
         {
-            case WorldState.Init:
+            case WorldState.Loading:
                 chunkManager.UpdateChunk(false);
                 if (chunkManager.ChunkWaitUpdateCount == 0)
                     state = WorldState.Working;

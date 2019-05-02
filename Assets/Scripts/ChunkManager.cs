@@ -115,6 +115,7 @@ public class ChunkManager
                 workNSpeed++;
             else
                 workNSpeed--;
+            workNSpeed = Mathf.Clamp(workNSpeed, 1, 16);
         }
         else
         {
@@ -134,6 +135,7 @@ public class ChunkManager
                 workNSpeed++;
             else
                 workNSpeed--;
+            workNSpeed = Mathf.Clamp(workNSpeed, 1, 16);
         }
     }
 

@@ -395,6 +395,7 @@ GameObject:
   - component: {fileID: 534669904}
   - component: {fileID: 534669903}
   - component: {fileID: 534669906}
+  - component: {fileID: 534669907}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -484,6 +485,22 @@ MonoBehaviour:
   eyeOffset: 0.6
   thirdPersonOffset: 8
   isThirdPerson: 0
+--- !u!114 &534669907
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 534669902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fda0f9543aa776c44bce58eac115d1fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  selectionFaceX: {fileID: 704375176}
+  selectionFaceY: {fileID: 724565154}
+  selectionFaceZ: {fileID: 128430159}
+  distance: 10
 --- !u!1 &629133633
 GameObject:
   m_ObjectHideFlags: 0

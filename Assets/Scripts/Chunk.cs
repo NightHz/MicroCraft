@@ -30,6 +30,7 @@ public struct DisplayUnit
     public int yOffset;
     public GameObject obj;
     public MeshFilter meshFilter;
+    public MeshCollider meshCollider;
     public Mesh mesh;
 
     public void Init(Transform parent, Material material, Chunk chunk, int yOffset)
@@ -41,6 +42,7 @@ public struct DisplayUnit
         obj.transform.position = chunk.Position;
         meshFilter = obj.AddComponent<MeshFilter>();
         obj.AddComponent<MeshRenderer>().material = material;
+        meshCollider = obj.AddComponent<MeshCollider>();
         mesh = null;
     }
 
@@ -87,14 +89,20 @@ public class Chunk
                 active = true;
                 if (displayUnits != null)
                     for (int i = 0; i < aspect; i++)
+                    {
                         displayUnits[i].meshFilter.mesh = displayUnits[i].mesh;
+                        displayUnits[i].meshCollider.sharedMesh = displayUnits[i].mesh;
+                    }
             }
             else
             {
                 active = false;
                 if (displayUnits != null)
                     for (int i = 0; i < aspect; i++)
+                    {
                         displayUnits[i].meshFilter.mesh = null;
+                        displayUnits[i].meshCollider.sharedMesh = null;
+                    }
             }
         }
     }
@@ -292,6 +300,10 @@ public class Chunk
                 blocks[x, y, z] = id;
                 state = ChunkState.WaitUpdate;
                 displayUnits[y / width].state = DisplayUnitState.WaitUpdate;
+                if (y != height - 1)
+                    displayUnits[(y + 1) / width].state = DisplayUnitState.WaitUpdate;
+                if (y != 0)
+                    displayUnits[(y - 1) / width].state = DisplayUnitState.WaitUpdate;
                 return true;
             }
         }
