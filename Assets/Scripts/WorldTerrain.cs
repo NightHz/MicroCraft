@@ -2,18 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum BiomeID : byte
-{
-    Ocean = 0,
-    Plains = 1,
-    Desert = 2,
-    Mountains = 3,
-    Forest = 4,
-    Swamp = 5,
-    Beach = 6,
-    River = 7
-}
-
 /// <summary>
 /// 世界地形
 /// 这是一个静态类
@@ -50,13 +38,6 @@ public static class WorldTerrain
         densityNoise = new PerlinNoise3(densitySeed);
         
         Debug.Log("seed=" + seed);
-    }
-
-    public static BiomeID GetBiome(int x,int y,int z)
-    {
-        float temperature;
-        float rainfall;
-        return BiomeID.Plains;
     }
 
     public static BlockID GetBaseBlock(int x, int y, int z)
