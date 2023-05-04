@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
+using static UnityEngine.ParticleSystem;
 
 public class PlayerController : MonoBehaviour
 {
@@ -9,6 +11,8 @@ public class PlayerController : MonoBehaviour
     [Range(1.2f,12f)]
     public float speed = 3f;
 
+    private bool first = true;
+
     private void Start()
     {
         world = GameObject.FindGameObjectWithTag("World").GetComponent<World>();
@@ -16,8 +20,23 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKey(KeyCode.Escape))
+        {
+#if UNITY_EDITOR
+            EditorApplication.ExitPlaymode();
+#else
+            Application.Quit();
+#endif
+        }
+
         if (world.State != WorldState.Working)
             return;
+        else if(first)
+        {
+            first = false;
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
 
         float move = speed * Time.deltaTime;
         if (Input.GetKey(KeyCode.A))
